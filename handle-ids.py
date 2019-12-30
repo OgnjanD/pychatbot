@@ -45,7 +45,7 @@ def main(mytimer: func.TimerRequest) -> None:
     sqlPassword = os.environ.get('sqlPassword')
     sqlDatabase = os.environ.get('sqlDatabase')
 
-    TOKEN = ""
+    TOKEN = "817788457:AAGqFdvujBvhJ2UjVE3VvcGD4tlq0ux8SFY"
     URL = "https://api.telegram.org/bot{}/".format(TOKEN)
 
     connection = pymysql.connect(
@@ -57,6 +57,10 @@ def main(mytimer: func.TimerRequest) -> None:
     cursorclass=pymysql.cursors.DictCursor)
     c = connection.cursor()
 
+    def update_tables(sql_statement):
+        c = connection.cursor()
+        c.execute(sql_statement)
+        return connection.commit()
 
     def get_url(url):
         response = requests.get(url)
@@ -116,8 +120,7 @@ def main(mytimer: func.TimerRequest) -> None:
             incorrect_id.append((update['message']['chat'], update['message']['text']))
     for user in text_start:
             send_message("Hi, please send me your participant ID.", user['id'])
-            c.execute("INSERT INTO start_done (id) VALUES ({})".format(user['id']))
-            connection.commit()
+            update_tables("INSERT INTO start_done (id) VALUES ({})".format(user['id']))
     for user in text_id:
         try:
             c.execute("SELECT * FROM users_p WHERE trial_id = '{}'".format(user[1]))
@@ -126,23 +129,17 @@ def main(mytimer: func.TimerRequest) -> None:
             logging.info("nope")
         if len(user_exists) > 0:
             send_message("Thank you for sharing your participant number.", user[0]['id'])
-            c.execute("UPDATE users_p SET id = {} WHERE trial_id = '{}'".format(user[0]["id"], user[1]))
-            connection.commit()
-            c.execute("DELETE FROM wrong_ids WHERE telegram_id = '{}'".format(user[0]['id']))
-            connection.commit()
+            update_tables("UPDATE users_p SET id = {} WHERE trial_id = '{}'".format(user[0]["id"], user[1]))
+            update_tables("DELETE FROM wrong_ids WHERE telegram_id = '{}'".format(user[0]['id']))
             user_exists = []
         elif (not wrong_ids or user[1] not in wrong_id) and user[0]['id'] not in user_exists:
             send_message("This number was not correct. Please try again.", user[0]['id'])
-            c.execute("INSERT IGNORE INTO wrong_ids (telegram_id) VALUES('{}')".format(user[0]['id']))
-            connection.commit()
-            c.execute("UPDATE wrong_ids SET wrong_id = concat(wrong_id, ',{}') WHERE telegram_id = '{}'".format(user[1], user[0]['id']))
-            connection.commit()
+            update_tables("INSERT IGNORE INTO wrong_ids (telegram_id) VALUES('{}')".format(user[0]['id']))
+            update_tables("UPDATE wrong_ids SET wrong_id = concat(wrong_id, ',{}') WHERE telegram_id = '{}'".format(user[1], user[0]['id']))
     for user in incorrect_id:
         if (not wrong_format or user[1] not in wrong_format) and user[0]['id'] not in sorted_ids:
             send_message("That does not look like the correct format. Check the instructions again", user[0]['id'])
-            c.execute("INSERT IGNORE INTO wrong_ids (telegram_id) VALUES('{}')".format(user[0]['id']))
-            connection.commit()
-            c.execute("UPDATE wrong_ids SET wrong_format = concat(wrong_format, ',{}') WHERE telegram_id = '{}'".format(user[1], user[0]['id']))
-            connection.commit()
+            update_tables("INSERT IGNORE INTO wrong_ids (telegram_id) VALUES('{}')".format(user[0]['id']))
+            update_tables("UPDATE wrong_ids SET wrong_format = concat(wrong_format, ',{}') WHERE telegram_id = '{}'".format(user[1], user[0]['id']))
     
     
