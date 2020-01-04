@@ -48,7 +48,7 @@ def main(mytimer: func.TimerRequest) -> None:
     user = sqlUser,
     password = sqlPassword,
     db = sqlDatabase,
-    ssl={'ssl': {'ssl-ca': '/var/www/html/BaltimoreCyberTrustRoot.crt.pem'}},
+    ssl={""},
     cursorclass=pymysql.cursors.DictCursor)
 
     c = connection.cursor()

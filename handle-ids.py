@@ -45,7 +45,7 @@ def main(mytimer: func.TimerRequest) -> None:
     sqlPassword = os.environ.get('sqlPassword')
     sqlDatabase = os.environ.get('sqlDatabase')
 
-    TOKEN = "817788457:AAGqFdvujBvhJ2UjVE3VvcGD4tlq0ux8SFY"
+    TOKEN = ""
     URL = "https://api.telegram.org/bot{}/".format(TOKEN)
 
     connection = pymysql.connect(
@@ -53,7 +53,7 @@ def main(mytimer: func.TimerRequest) -> None:
     user = sqlUser,
     password = sqlPassword,
     db = sqlDatabase,
-    ssl={'ssl': {'ssl-ca': '/var/www/html/BaltimoreCyberTrustRoot.crt.pem'}},
+    ssl={""},
     cursorclass=pymysql.cursors.DictCursor)
     c = connection.cursor()
 
